@@ -1,0 +1,7 @@
+Flask
+pandas
+joblib
+catboost
+scikit-learn
+twilio
+gunicorn
