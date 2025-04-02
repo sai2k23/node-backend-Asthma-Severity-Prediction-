@@ -12,25 +12,35 @@ app.use(cors({
 }));
 
 
+
 app.get('/', (req, res) => {
     res.send('Backend is working! 🎉');
-  });
-  // Twilio Credentials
+});
+// Twilio Credentials
 const TWILIO_VERIFY_SID = process.env.TWILIO_VERIFY_SID;
 const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID;
 const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN;
-const TWILIO_PHONE_NUMBER  = process.env.TWILIO_PHONE_NUMBER;
+const TWILIO_PHONE_NUMBER = process.env.TWILIO_PHONE_NUMBER;
 
 const client = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
 
 // Send OTP
 app.post("/api/send-otp", async (req, res) => {
     const { mobile } = req.body;
+    if (!mobile) {
+        return res.status(400).json({ success: false, message: "Mobile number is required!" });
+    }
+
+    if (!mobile.startsWith("+")) {
+        mobile = `+91${mobile.trim()}`;
+    }
+
+    console.log("Sending OTP to:", mobile);
     try {
         const response = await client.verify.v2.services(TWILIO_VERIFY_SID)
-      .verifications.create({ to: mobile, channel: "sms" });
+            .verifications.create({ to: mobile, channel: "sms" });
 
-    console.log("OTP Sent:", response.status);
+        console.log("OTP Sent:", response.status);
         res.json({ success: true, message: "OTP sent successfully!" });
     } catch (error) {
         console.error("Send OTP Error:", error);
@@ -58,7 +68,7 @@ app.post("/api/verify-otp", async (req, res) => {
 // Route to send SMS
 app.post("/send-sms", async (req, res) => {
     let { phone, message } = req.body;
-    
+
     if (!phone || !message) {
         return res.status(400).send("Missing phone or message");
     }
@@ -72,7 +82,7 @@ app.post("/send-sms", async (req, res) => {
         const response = await client.messages.create({
             body: message,
             from: TWILIO_PHONE_NUMBER,
-            to: phone, 
+            to: phone,
         });
 
         console.log("SMS Sent:", response.sid);
