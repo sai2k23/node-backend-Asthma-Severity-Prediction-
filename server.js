@@ -3,10 +3,8 @@ const express = require("express");
 const cors = require("cors");
 const twilio = require("twilio");
 const app = express();
-//app.use(cors({ origin: "http://localhost:3000", credentials: true }));
-app.use(express.json());
 
-// Twilio Credentials
+app.use(express.json());
 app.use(cors({
     origin: "*",
     methods: ["GET", "POST"],
@@ -17,20 +15,22 @@ app.use(cors({
 app.get('/', (req, res) => {
     res.send('Backend is working! 🎉');
   });
+  // Twilio Credentials
 const TWILIO_VERIFY_SID = process.env.TWILIO_VERIFY_SID;
 const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID;
 const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN;
-const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER;
+const TWILIO_PHONE_NUMBER  = process.env.TWILIO_PHONE_NUMBER;
 
 const client = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
-client.verify.services(TWILIO_VERIFY_SID)
 
 // Send OTP
 app.post("/api/send-otp", async (req, res) => {
     const { mobile } = req.body;
     try {
-        await client.verify.services(TWILIO_VERIFY_SID)
-            .verifications.create({ to: mobile, channel: "sms" });
+        const response = await client.verify.v2.services(TWILIO_VERIFY_SID)
+      .verifications.create({ to: mobile, channel: "sms" });
+
+    console.log("OTP Sent:", response.status);
         res.json({ success: true, message: "OTP sent successfully!" });
     } catch (error) {
         console.error("Send OTP Error:", error);
@@ -41,7 +41,7 @@ app.post("/api/send-otp", async (req, res) => {
 app.post("/api/verify-otp", async (req, res) => {
     const { mobile, otp } = req.body;
     try {
-        const verification = await client.verify.services(TWILIO_VERIFY_SID)
+        const verification = await client.verify.v2.services(TWILIO_VERIFY_SID)
             .verificationChecks.create({ to: mobile, code: otp });
 
         if (verification.status === "approved") {
@@ -71,7 +71,7 @@ app.post("/send-sms", async (req, res) => {
     try {
         const response = await client.messages.create({
             body: message,
-            from: twilioPhoneNumber,
+            from: TWILIO_PHONE_NUMBER,
             to: phone, 
         });
 
