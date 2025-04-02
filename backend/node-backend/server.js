@@ -8,7 +8,7 @@ app.use(express.json());
 
 // Twilio Credentials
 app.use(cors({
-    origin: "*",
+    origin: "https://asthmaseverityprediction.netlify.app/",
     methods: ["GET", "POST"],
     allowedHeaders: ["Content-Type"],
 }));
